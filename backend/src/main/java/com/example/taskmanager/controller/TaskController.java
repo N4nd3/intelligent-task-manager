@@ -31,10 +31,36 @@ public class TaskController {
 
     // POST /api/tasks - Create a new task
     @PostMapping
-    public Task createTask(@RequestBody Task task) {
-        return taskService.saveTask(task);
+    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+        Task savedTask = taskService.saveTask(task);
+        // Lekérjük az adatbázisból a friss, teljes adatot
+        return taskService.getTaskById(savedTask.getId())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.badRequest().build());
     }
+    // PUT /api/tasks/{id} - Update an existing task
+    @PutMapping("/{id}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task taskDetails) {
+        return taskService.getTaskById(id).map(existingTask -> {
+            existingTask.setTitle(taskDetails.getTitle());
+            existingTask.setDescription(taskDetails.getDescription());
+            existingTask.setStatus(taskDetails.getStatus());
+            existingTask.setPriority(taskDetails.getPriority());
+            existingTask.setDeadline(taskDetails.getDeadline());
+            
+            // Ha küldtek be új projektet vagy assignee-t, azokat is frissítjük
+            if (taskDetails.getProject() != null) {
+                existingTask.setProject(taskDetails.getProject());
+            }
+            if (taskDetails.getAssignee() != null) {
+                existingTask.setAssignee(taskDetails.getAssignee());
+            }
 
+            Task updatedTask = taskService.saveTask(existingTask);
+            return ResponseEntity.ok(updatedTask);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+    
     // DELETE /api/tasks/{id} - Delete task
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
