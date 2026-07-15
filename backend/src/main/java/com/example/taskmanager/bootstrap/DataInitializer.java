@@ -21,50 +21,48 @@ public class DataInitializer implements CommandLineRunner {
     private final TaskRepository taskRepository;
     private final PasswordEncoder passwordEncoder;
 
-   @Override
-public void run(String... args) throws Exception {
-    // We clean up existing user to guarantee the correct hashed password is saved
-    userRepository.findByEmail("developer@taskmanager.com").ifPresent(user -> {
-        userRepository.delete(user);
-        log.info("Existing test user deleted for update.");
-    });
+        @Override
+        public void run(String... args) throws Exception {
+        if (userRepository.count() == 0) {
+                log.info("Database is empty. Generating test data...");
 
-    log.info("Generating test data with encrypted password...");
+                // 1. Create Test User
+                User devUser = User.builder()
+                        .email("developer@taskmanager.com")
+                        .password(passwordEncoder.encode("secretpassword"))
+                        .firstName("Peter")
+                        .lastName("Test")
+                        .roles(Set.of(Role.USER, Role.PROJECT_MANAGER))
+                        .build();
 
-    // 1. Create Test User
-    User devUser = User.builder()
-            .email("developer@taskmanager.com")
-            .password(passwordEncoder.encode("secretpassword")) // Securely hashed
-            .firstName("Peter")
-            .lastName("Test")
-            .roles(Set.of(Role.USER, Role.PROJECT_MANAGER))
-            .build();
+                userRepository.save(devUser);
+                log.info("Test user saved: {}", devUser.getEmail());
 
-    userRepository.save(devUser);
-    log.info("Test user saved: {}", devUser.getEmail());
+                // 2. Create Test Project
+                Project taskManagerProject = Project.builder()
+                        .name("Intelligent Task Manager")
+                        .description("University project with modern technologies.")
+                        .owner(devUser)
+                        .build();
 
-    // 2. Create Test Project
-    Project taskManagerProject = Project.builder()
-            .name("Intelligent Task Manager")
-            .description("University project with modern technologies.")
-            .owner(devUser)
-            .build();
+                projectRepository.save(taskManagerProject);
+                log.info("Test project saved: {}", taskManagerProject.getName());
 
-    projectRepository.save(taskManagerProject);
-    log.info("Test project saved: {}", taskManagerProject.getName());
+                // 3. Create Test Tasks
+                Task task1 = Task.builder()
+                        .title("Setup backend data model")
+                        .description("Create JPA entities and repositories for PostgreSQL.")
+                        .status(TaskStatus.DONE)
+                        .priority(TaskPriority.HIGH)
+                        .deadline(LocalDate.now().plusDays(2))
+                        .project(taskManagerProject)
+                        .assignee(devUser)
+                        .build();
 
-    // 3. Create Test Tasks
-    Task task1 = Task.builder()
-            .title("Setup backend data model")
-            .description("Create JPA entities and repositories for PostgreSQL.")
-            .status(TaskStatus.DONE)
-            .priority(TaskPriority.HIGH)
-            .deadline(LocalDate.now().plusDays(2))
-            .project(taskManagerProject)
-            .assignee(devUser)
-            .build();
-
-    taskRepository.save(task1);
-    log.info("Test tasks saved successfully!");
-}
+                taskRepository.save(task1);
+                log.info("Test tasks saved successfully!");
+        } else {
+                log.info("Database already contains data. Seeding skipped.");
+        }
+        }
 }

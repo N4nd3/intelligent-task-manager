@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "tasks")
 @Getter
@@ -35,10 +37,12 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User assignee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Project project;
 
     private LocalDateTime createdAt;
