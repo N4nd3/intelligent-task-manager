@@ -38,7 +38,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Authentication endpoints are public
+                .requestMatchers("/api/auth/login").permitAll() // Authentication endpoints are public
                 .anyRequest().authenticated() // All other requests require a valid token
             );
 
