@@ -1,3 +1,29 @@
 spring:
   application:
     name: taskmanager
+# --- POSTGRESQL ADATBÁZIS BEÁLLÍTÁSOK ---
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskmanager
+    username: devuser
+    password: devpassword
+    driver-class-name: org.postgresql.Driver
+
+  # --- JPA / HIBERNATE BEÁLLÍTÁSOK ---
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # Automatikusan létrehozza/frissíti a táblákat az adatbázisban a Java kód alapján
+    show-sql: true # Kiírja a konzolra a háttérben futó SQL lekérdezéseket (fejlesztésnél nagyon hasznos)
+    properties:
+      hibernate:
+       format_sql: true
+
+  # --- REDIS BEÁLLÍTÁSOK ---
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# --- SZERVER BEÁLLÍTÁS ---
+server:
+  port: 8081 # A backend API-d ezen a porton fog futni

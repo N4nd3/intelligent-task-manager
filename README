@@ -1,0 +1,12 @@
+docker compose up -d
+docker ps
+docker compose down
+
+cd Backend
+./mvnw spring-boot:run
+
+Backend: 8081 port
+
+npm run dev
+
+Frontend: 5173 port

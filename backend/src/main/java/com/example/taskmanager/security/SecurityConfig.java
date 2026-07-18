@@ -39,15 +39,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Ezt a sort add hozzá!
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login").permitAll() // Authentication endpoints are public
-                .anyRequest().authenticated() // All other requests require a valid token
+                // 1. Minden OPTIONS kérést (CORS előkérés) kötelezően engedélyezni kell hitelesítés nélkül!
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // 2. Minden /api/auth/ kezdetű végpont (login, register stb.) legyen nyilvános
+                .requestMatchers("/api/auth/**").permitAll() 
+                
+                // 3. Minden egyéb kéréshez (pl. /api/projects) kötelező a valid JWT token
+                .anyRequest().authenticated() 
             );
 
-        // Add our custom JWT filter before the standard username-password filter
+        // A saját JWT szűrőnk beillesztése a standard szűrő elé
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -55,13 +61,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Engedélyezzük a helyi React fejlesztői portokat (a Vite alapértelmezetten az 5173-at használja)
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173")); 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+       
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:5173")); 
+        
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Cache-Control", "Accept"));
+        
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Alkalmazzuk az összes (/api/**) útvonalra
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
